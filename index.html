@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackathon: Ship It</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(18, 27, 52, 0.9);
+      --panel-light: #172342;
+      --text: #f5f7ff;
+      --muted: #aab5d6;
+      --accent: #73f5b2;
+      --accent-2: #8d7aff;
+      --danger: #ff7b9c;
+      --border: rgba(255,255,255,.12);
+      --shadow: 0 24px 70px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(115,245,178,.16), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(141,122,255,.2), transparent 30rem),
+        linear-gradient(135deg, #090d1b, var(--bg));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .16;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 75%);
+    }
+
+    .app {
+      width: min(1050px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: .04em;
+      font-weight: 800;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: #07131a;
+      background: linear-gradient(135deg, var(--accent), #c5ffe1);
+      box-shadow: 0 0 30px rgba(115,245,178,.3);
+      font-size: 1.25rem;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: right;
+    }
+
+    .progress-wrap {
+      margin-bottom: 24px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: 8px;
+    }
+
+    .progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 33.333%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .5s ease;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .story, .sidebar {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .story {
+      min-height: 590px;
+      padding: clamp(24px, 5vw, 52px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .scene-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .scene-kicker::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    h1 {
+      max-width: 720px;
+      margin: 20px 0 18px;
+      font-size: clamp(2.35rem, 6vw, 5.2rem);
+      line-height: .96;
+      letter-spacing: -.07em;
+    }
+
+    .story-text {
+      max-width: 680px;
+      color: #d7ddf1;
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      line-height: 1.7;
+    }
+
+    .story-text strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .choices {
+      display: grid;
+      gap: 12px;
+      margin-top: 36px;
+    }
+
+    button {
+      border: 0;
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      width: 100%;
+      padding: 17px 19px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(255,255,255,.055);
+      text-align: left;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    .choice:hover, .choice:focus-visible {
+      outline: none;
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      background: rgba(115,245,178,.1);
+    }
+
+    .choice-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+    }
+
+    .choice-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 10px;
+      color: var(--accent);
+      background: rgba(115,245,178,.1);
+    }
+
+    .arrow {
+      color: var(--muted);
+      font-size: 1.25rem;
+      transition: transform .2s ease;
+    }
+
+    .choice:hover .arrow { transform: translateX(4px); color: var(--accent); }
+
+    .sidebar {
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: .04em;
+    }
+
+    .team-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 15px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--accent-2), #c6bfff);
+      color: white;
+      font-weight: 900;
+    }
+
+    .team-card strong { display: block; }
+    .team-card span { color: var(--muted); font-size: .84rem; }
+
+    .stat {
+      padding-bottom: 17px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .stat-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: .83rem;
+    }
+
+    .stat-top strong { color: var(--text); }
+
+    .meter {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+    }
+
+    .meter i {
+      display: block;
+      height: 100%;
+      width: 50%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width .5s ease;
+    }
+
+    .hint {
+      margin-top: auto;
+      padding: 16px;
+      border: 1px solid rgba(141,122,255,.28);
+      border-radius: 15px;
+      background: rgba(141,122,255,.1);
+      color: #d9d4ff;
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+
+    .hint strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #bcb2ff;
+    }
+
+    .restart {
+      display: none;
+      align-self: flex-start;
+      margin-top: 20px;
+      padding: 11px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .restart:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .ending .restart { display: inline-block; }
+
+    @media (max-width: 780px) {
+      main { grid-template-columns: 1fr; }
+      .story { min-height: auto; }
+      .sidebar { display: grid; grid-template-columns: 1fr 1fr; }
+      .sidebar h2, .hint { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 510px) {
+      .app { width: min(100% - 20px, 1050px); padding-top: 16px; }
+      header { margin-bottom: 20px; }
+      .status { display: none; }
+      .story { padding: 25px 20px; border-radius: 20px; }
+      .sidebar { grid-template-columns: 1fr; border-radius: 20px; }
+      .sidebar h2, .hint { grid-column: auto; }
+      h1 { font-size: 3rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <span>HACK//PATH</span>
+      </div>
+      <div class="status" id="status">Saturday · 10:42 PM<br />12 hours to demo day</div>
+    </header>
+
+    <div class="progress-wrap" aria-label="Story progress">
+      <div class="progress-label">
+        <span id="progressText">Scene 1 of 3</span>
+        <span id="progressPercent">33%</span>
+      </div>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <main>
+      <section class="story" id="story">
+        <div>
+          <div class="scene-kicker" id="kicker">The spark</div>
+          <h1 id="title">One idea.<br />One night.</h1>
+          <div class="story-text" id="storyText"></div>
+        </div>
+        <div class="choices" id="choices"></div>
+        <button class="restart" id="restart">↺ Start over</button>
+      </section>
+
+      <aside class="sidebar">
+        <h2>Mission control</h2>
+
+        <div class="team-card">
+          <div class="avatar">M</div>
+          <div>
+            <strong>Maya Chen</strong>
+            <span>Student · Builder</span>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-top"><span>Energy</span><strong id="energyValue">72%</strong></div>
+          <div class="meter"><i id="energyMeter" style="width:72%"></i></div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-top"><span>Confidence</span><strong id="confidenceValue">48%</strong></div>
+          <div class="meter"><i id="confidenceMeter" style="width:48%; background:var(--accent-2)"></i></div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-top"><span>Demo readiness</span><strong id="readinessValue">18%</strong></div>
+          <div class="meter"><i id="readinessMeter" style="width:18%; background:#ffcb6b"></i></div>
+        </div>
+
+        <div class="hint" id="hint">
+          <strong>Field note</strong>
+          The best hackathon projects solve a real problem, not every problem.
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const scenes = {
+      start: {
+        number: 1,
+        kicker: "The spark",
+        title: "One idea.<br>One night.",
+        text: `The campus innovation lab is buzzing. You have <strong>12 hours</strong> until demo day and one half-formed idea: a tiny app that helps students find quiet places to study. Your teammate, Leo, is waiting by the coffee machine.`,
+        hint: "The best hackathon projects solve a real problem, not every problem.",
+        choices: [
+          { icon: "💡", label: "Pitch the bold version", next: "scope", changes: { confidence: 8, readiness: 5, energy: -4 } },
+          { icon: "🧭", label: "Ask students what they need", next: "research", changes: { confidence: 4, readiness: 9, energy: -8 } }
+        ]
+      },
+      scope: {
+        number: 2,
+        kicker: "Scene two · The plan",
+        title: "Make it<br>matter.",
+        text: `Leo's eyes light up. Together, you cut the idea down to one promise: <strong>“Find a free, quiet seat in under 30 seconds.”</strong> Now there is time for one differentiator before the code freezes.`,
+        hint: "A focused demo is more memorable than a crowded feature list.",
+        choices: [
+          { icon: "📍", label: "Build live seat availability", next: "finale", changes: { confidence: 6, readiness: 16, energy: -18 } },
+          { icon: "✨", label: "Add a delightful onboarding flow", next: "finale", changes: { confidence: 10, readiness: 11, energy: -12 } }
+        ]
+      },
+      research: {
+        number: 2,
+        kicker: "Scene two · The signal",
+        title: "Listen<br>closely.",
+        text: `Three quick interviews reveal the same pain point: students do not know whether a room is actually available. You discover a simple shortcut—let users <strong>check in with one tap</strong> and show the last verified time.`,
+        hint: "Real users can turn a vague idea into a sharp product decision.",
+        choices: [
+          { icon: "⚙️", label: "Prototype the check-in flow", next: "finale", changes: { confidence: 12, readiness: 17, energy: -16 } },
+          { icon: "📊", label: "Build a room popularity map", next: "finale", changes: { confidence: 5, readiness: 10, energy: -20 } }
+        ]
+      },
+      finale: {
+        number: 3,
+        kicker: "Scene three · The moment",
+        title: "Ship<br>the story.",
+        text: `It is 8:57 AM. The projector flickers, then comes alive. Your prototype is small, fast, and clear. The judges lean forward as you show a student finding a seat between classes. <strong>Now you get one final choice:</strong> how will you close?`,
+        hint: "The demo is not just what you built. It is why anyone should care.",
+        choices: [
+          { icon: "🎤", label: "Tell the student's story", next: "storyEnding", changes: { confidence: 15, readiness: 12, energy: -3 } },
+          { icon: "🚀", label: "Invite the judges to try it", next: "tryEnding", changes: { confidence: 10, readiness: 16, energy: -5 } }
+        ]
+      },
+      storyEnding: {
+        number: 3,
+        kicker: "Demo complete",
+        title: "You made<br>it real.",
+        text: `You tell the story of a first-year student who almost gave up on finding a place to study. Then you show how your app changes that moment. The room goes quiet—then the judges start nodding. <strong>Your idea has a future.</strong>`,
+        hint: "Every great project starts as a decision to begin.",
+        ending: true
+      },
+      tryEnding: {
+        number: 3,
+        kicker: "Demo complete",
+        title: "Let them<br>touch it.",
+        text: `One judge checks in to a room. Another searches for a seat. In less than a minute, the whole panel understands the product without another slide. <strong>Your prototype does the talking.</strong>`,
+        hint: "The strongest demos make the audience part of the story.",
+        ending: true
+      }
+    };
+
+    let current = "start";
+    let stats = { energy: 72, confidence: 48, readiness: 18 };
+
+    const elements = {
+      story: document.getElementById("story"),
+      kicker: document.getElementById("kicker"),
+      title: document.getElementById("title"),
+      text: document.getElementById("storyText"),
+      choices: document.getElementById("choices"),
+      hint: document.getElementById("hint"),
+      restart: document.getElementById("restart"),
+      progressText: document.getElementById("progressText"),
+      progressPercent: document.getElementById("progressPercent"),
+      progressBar: document.getElementById("progressBar"),
+      status: document.getElementById("status"),
+      energyValue: document.getElementById("energyValue"),
+      energyMeter: document.getElementById("energyMeter"),
+      confidenceValue: document.getElementById("confidenceValue"),
+      confidenceMeter: document.getElementById("confidenceMeter"),
+      readinessValue: document.getElementById("readinessValue"),
+      readinessMeter: document.getElementById("readinessMeter")
+    };
+
+    function clamp(value) {
+      return Math.max(0, Math.min(100, value));
+    }
+
+    function updateStats() {
+      Object.keys(stats).forEach(key => {
+        stats[key] = clamp(stats[key]);
+        const label = key[0].toUpperCase() + key.slice(1);
+        elements[`${key}Value`].textContent = `${stats[key]}%`;
+        elements[`${key}Meter`].style.width = `${stats[key]}%`;
+      });
+    }
+
+    function render(sceneId) {
+      current = sceneId;
+      const scene = scenes[sceneId];
+
+      elements.kicker.textContent = scene.kicker;
+      elements.title.innerHTML = scene.title;
+      elements.text.innerHTML = scene.text;
+      elements.hint.innerHTML = `<strong>Field note</strong>${scene.hint}`;
+      elements.choices.innerHTML = "";
+      elements.story.classList.toggle("ending", Boolean(scene.ending));
+
+      const percent = scene.number === 1 ? 33 : scene.number === 2 ? 66 : 100;
+      elements.progressText.textContent = scene.ending ? "Story complete" : `Scene ${scene.number} of 3`;
+      elements.progressPercent.textContent = `${percent}%`;
+      elements.progressBar.style.width = `${percent}%`;
+      elements.status.innerHTML = scene.ending
+        ? "Saturday · 9:04 AM<br />You shipped something meaningful"
+        : scene.number === 1
+          ? "Saturday · 10:42 PM<br />12 hours to demo day"
+          : "Sunday · 2:16 AM<br />The clock is moving";
+
+      if (!scene.ending) {
+        scene.choices.forEach(choice => {
+          const button = document.createElement("button");
+          button.className = "choice";
+          button.innerHTML = `
+            <span class="choice-label">
+              <span class="choice-icon">${choice.icon}</span>
+              <span>${choice.label}</span>
+            </span>
+            <span class="arrow">→</span>
+          `;
+          button.addEventListener("click", () => {
+            Object.entries(choice.changes || {}).forEach(([key, value]) => {
+              stats[key] += value;
+            });
+            updateStats();
+            render(choice.next);
+          });
+          elements.choices.appendChild(button);
+        });
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    elements.restart.addEventListener("click", () => {
+      stats = { energy: 72, confidence: 48, readiness: 18 };
+      updateStats();
+      render("start");
+    });
+
+    updateStats();
+    render("start");
+  </script>
+</body>
+</html>
